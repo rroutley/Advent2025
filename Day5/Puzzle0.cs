@@ -1,5 +1,8 @@
 // #define Sample
 
+using System.Collections.Concurrent;
+using System.ComponentModel;
+
 public class Puzzle5 : IPuzzle
 {
 
@@ -13,8 +16,8 @@ public class Puzzle5 : IPuzzle
         long result = 0;
 
 
-        List<Range> ranges = new();
-        List<long> ingredients = new();
+        List<Range> ranges = [];
+        List<long> ingredients = [];
         int state = 0;
         for (int i = 0; i < lines.Length; i++)
         {
@@ -44,7 +47,7 @@ public class Puzzle5 : IPuzzle
             bool found = false;
             foreach (var range in ranges)
             {
-                if (ingredient >= range.Start && ingredient <= range.End)
+                if (range.Contains(ingredient))
                 {
                     found = true;
                     break;
@@ -58,17 +61,63 @@ public class Puzzle5 : IPuzzle
             }
         }
 
-
-
         System.Console.WriteLine("Part 1 = {0}", result);
 
+
+        result = 0;
+
+        List<Range> combined = [];
+
+        foreach (var range in ranges)
+        {
+            // Completely contained in an existing range
+            if (combined.Any(r => r.Contains(range)))
+            {
+                continue;
+            }
+
+            var rangeToAdd = range;
+
+            // Overlaps with an existing range
+            while (true)
+            {
+                var overlapping = combined.FirstOrDefault(r => r.Overlaps(rangeToAdd));
+                if (overlapping == default)
+                {
+                    break;
+                }
+
+                combined.Remove(overlapping);
+                
+                // Expand the range we will add
+                rangeToAdd = overlapping.Union(rangeToAdd);
+            }
+
+            combined.Add(rangeToAdd);
+
+        }
+
+
+        foreach (var range in combined.OrderBy(r => r.Start))
+        {
+            System.Console.WriteLine(range);
+            result += range.Length;
+        }
 
 
         System.Console.WriteLine("Part 2 = {0}", result);
 
     }
 
-    record Range(long Start, long End);
+    record Range(long Start, long End)
+    {
+        public bool Contains(long value) => value >= Start && value <= End;
+        public bool Contains(Range other) => Contains(other.Start) && Contains(other.End);
+        public bool Overlaps(Range other) => Contains(other) || other.Contains(Start) || other.Contains(End);
+        public Range Union(Range other) => new(Math.Min(Start, other.Start), Math.Max(End, other.End));
+
+        public long Length = End - Start + 1;
+    }
 
     private string sample = """
 3-5
