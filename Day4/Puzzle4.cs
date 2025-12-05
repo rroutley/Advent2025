@@ -1,7 +1,9 @@
-// #define Sample
+//#define Sample
+
 
 public class Puzzle4 : IPuzzle
 {
+    static bool print = true;
 
     public void Excute(FileInfo input)
     {
@@ -9,32 +11,59 @@ public class Puzzle4 : IPuzzle
         var lines = sample.Split("\r\n");
 #else
         var lines = File.ReadAllLines(input.FullName);
+        print = false;
 #endif
 
+        var grid = new char[lines[0].Length, lines.Length];
+        for (int i = 0; i < lines.Length; i++)
+        {
+            for (int j = 0; j < lines[i].Length; j++)
+            {
+                grid[j, i] = lines[i][j];
+            }
+        }
 
-        long result = Part1(lines);
+        (long result, grid) = Part1(grid);
 
         System.Console.WriteLine("Part 1 = {0}", result);
 
+
+        while (true)
+        {
+            (long r, char[,] newGrid) = Part1(grid);
+            if (r == 0)
+                break;
+
+            result += r;
+            grid = newGrid;
+        }
 
 
         System.Console.WriteLine("Part 2 = {0}", result);
 
     }
 
-    private static long Part1(string[] lines)
+    private static (long, char[,]) Part1(char[,] grid)
     {
         long result = 0;
 
-        for (int i = 0; i < lines.Length; i++)
+        int maxY = grid.GetUpperBound(1) + 1;
+        int maxX = grid.GetUpperBound(0) + 1;
+
+        char[,] newGrid = new char[maxX, maxY];
+
+        for (int y = 0; y < maxY; y++)
         {
-            for (int j = 0; j < lines[i].Length; j++)
+            for (int x = 0; x < maxX; x++)
             {
-                var c = lines[i][j];
+                var c = grid[x, y];
 
                 if (c != '@')
                 {
-                    System.Console.Write(c);
+                    if (print)
+                        System.Console.Write(c);
+
+                    newGrid[x, y] = '.';
                     continue;
                 }
 
@@ -47,12 +76,12 @@ public class Puzzle4 : IPuzzle
                         if (dx == 0 && dy == 0)
                             continue;
 
-                        int ni = i + dx;
-                        int nj = j + dy;
+                        int nx = x + dx;
+                        int ny = y + dy;
 
-                        if (ni >= 0 && ni < lines.Length && nj >= 0 && nj < lines[i].Length)
+                        if (nx >= 0 && nx < maxX && ny >= 0 && ny < maxY)
                         {
-                            if (lines[ni][nj] == '@')
+                            if (grid[nx, ny] == '@')
                                 neighbors++;
                         }
                     }
@@ -61,17 +90,24 @@ public class Puzzle4 : IPuzzle
                 if (neighbors < 4)
                 {
                     result++;
-                    System.Console.Write('x');
+                    newGrid[x, y] = '.';
+                    if (print)
+                        System.Console.Write('x');
+
                     continue;
                 }
 
-                System.Console.Write('@');
-            }
+                newGrid[x, y] = '@';
+                if (print)
+                    System.Console.Write('@');
 
-            System.Console.WriteLine();
+            }
+            if (print)
+                System.Console.WriteLine();
+
         }
 
-        return result;
+        return (result, newGrid);
     }
 
     private string sample = """
