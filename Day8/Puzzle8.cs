@@ -36,25 +36,7 @@ public class Puzzle8 : IPuzzle
 
         var circuits = points.Select(p => new HashSet<Point3d>([p])).ToList();
 
-        while (distances.Count > 0 && top > 0)
-        {
-            var pair = distances.Dequeue();
-
-            var c1 = circuits.First(c => c.Contains(pair.Item1));
-            var c2 = circuits.First(c => c.Contains(pair.Item2));
-
-            if (c1 != c2)
-            {
-                // Merge 2 Circuits
-                foreach (var p in c2)
-                {
-                    c1.Add(p);
-                }
-                circuits.Remove(c2);
-            }
-            top--;
-
-        }
+        BuildCircuits(top, distances, circuits);
 
         Console.WriteLine("{0} Circuits", circuits.Count);
         circuits.Sort((a, b) => b.Count - a.Count);
@@ -78,9 +60,40 @@ public class Puzzle8 : IPuzzle
         Console.WriteLine("Part 1 = {0}", result);
 
 
+        var lastPair = BuildCircuits(int.MaxValue, distances, circuits);
+
+        result = lastPair.Item1.X * lastPair.Item2.X;
 
         Console.WriteLine("Part 2 = {0}", result);
 
+    }
+
+    private (Point3d, Point3d) BuildCircuits(int top, PriorityQueue<(Point3d, Point3d), double> distances, List<HashSet<Point3d>> circuits)
+    {
+        while (distances.Count > 0 && top > 0)
+        {
+            var pair = distances.Dequeue();
+
+            var c1 = circuits.First(c => c.Contains(pair.Item1));
+            var c2 = circuits.First(c => c.Contains(pair.Item2));
+
+            if (c1 != c2)
+            {
+                // Merge 2 Circuits
+                foreach (var p in c2)
+                {
+                    c1.Add(p);
+                }
+                circuits.Remove(c2);
+            }
+            top--;
+
+            if (circuits.Count == 1)
+            {
+                return pair;
+            }
+        }
+        return (Point3d.Zero, Point3d.Zero);
     }
 
     record Point3d(int X, int Y, int Z)
@@ -92,6 +105,8 @@ public class Puzzle8 : IPuzzle
             long dz = this.Z - other.Z;
             return Math.Sqrt(dx * dx + dy * dy + dz * dz);
         }
+
+        public static readonly Point3d Zero = new(0, 0, 0);
 
         public override string ToString()
         {
