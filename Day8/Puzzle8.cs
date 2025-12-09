@@ -1,7 +1,4 @@
-//#define Sample
-
-
-using System.Collections.Concurrent;
+// #define Sample
 
 public class Puzzle8 : IPuzzle
 {
@@ -32,24 +29,21 @@ public class Puzzle8 : IPuzzle
             }
 
         }
-        System.Console.WriteLine(distances.Count);
+        Console.WriteLine(distances.Count);
 
 
         long result = 1;
 
-        var circuits = new List<HashSet<Point3d>>();
-        var singles = new HashSet<Point3d>(points);
+        var circuits = points.Select(p => new HashSet<Point3d>([p])).ToList();
 
         while (distances.Count > 0 && top > 0)
         {
             var pair = distances.Dequeue();
-            //    System.Console.WriteLine(pair);
-            singles.Remove(pair.Item1);
-            singles.Remove(pair.Item2);
 
-            var c1 = circuits.FirstOrDefault(c => c.Contains(pair.Item1));
-            var c2 = circuits.FirstOrDefault(c => c.Contains(pair.Item2));
-            if (c1 != null && c2 != null && c1 != c2)
+            var c1 = circuits.First(c => c.Contains(pair.Item1));
+            var c2 = circuits.First(c => c.Contains(pair.Item2));
+
+            if (c1 != c2)
             {
                 // Merge 2 Circuits
                 foreach (var p in c2)
@@ -58,55 +52,34 @@ public class Puzzle8 : IPuzzle
                 }
                 circuits.Remove(c2);
             }
-            else
-            {
-                var found = false;
-                foreach (var circuit in circuits)
-                {
-                    // Can we extend an existing circut?
-                    if (circuit.Contains(pair.Item1) || circuit.Contains(pair.Item2))
-                    {
-                        // Add both, the hashset will eliminate the duplicate
-                        circuit.Add(pair.Item1);
-                        circuit.Add(pair.Item2);
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found)
-                {
-                    // Start a new circut
-                    circuits.Add(new HashSet<Point3d>([pair.Item1, pair.Item2]));
-                }
-            }
             top--;
 
         }
 
-        System.Console.WriteLine("{0} Circuits", circuits.Count + singles.Count);
+        Console.WriteLine("{0} Circuits", circuits.Count);
         circuits.Sort((a, b) => b.Count - a.Count);
 
-        System.Console.WriteLine("Top 3 are:");
+        Console.WriteLine("Top 3 are:");
         for (int i = 0; i < 3; i++)
         {
             HashSet<Point3d> circuit = circuits[i];
             result *= circuit.Count;
-            System.Console.Write("{0} points: ", circuit.Count);
+            Console.Write("{0} points: ", circuit.Count);
             foreach (var point in circuit)
             {
-                System.Console.Write(point);
-                System.Console.Write(' ');
+                Console.Write(point);
+                Console.Write(' ');
 
             }
-            System.Console.WriteLine();
+            Console.WriteLine();
         }
 
 
-        System.Console.WriteLine("Part 1 = {0}", result);
+        Console.WriteLine("Part 1 = {0}", result);
 
 
 
-        System.Console.WriteLine("Part 2 = {0}", result);
+        Console.WriteLine("Part 2 = {0}", result);
 
     }
 
